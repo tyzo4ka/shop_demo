@@ -64,17 +64,28 @@
   "pk": 1,
   "fields": {
     "password": "pbkdf2_sha256$120000$EDfng6jA7vnt$0YiYg2OIeoi4EUuuY6IXinmEgRQTSbGn9vWw7lTbK+M=",
-    "last_login": "2019-09-03T08:31:32.265Z",
+    "last_login": "2019-09-03T11:07:08.594Z",
     "is_superuser": true,
     "username": "admin",
-    "first_name": "",
-    "last_name": "",
+    "first_name": "\u0410\u0434\u043c\u0438\u043d",
+    "last_name": "\u0410\u0434\u043c\u0438\u043d\u043e\u0432\u0438\u0447",
     "email": "",
     "is_staff": true,
     "is_active": true,
     "date_joined": "2019-09-03T06:46:57.824Z",
     "groups": [],
     "user_permissions": []
+  }
+},
+{
+  "model": "accounts.profile",
+  "pk": 1,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "birth_date": null,
+    "avatar": "user_pics/1566399253171599268.jpg"
   }
 }
 ]
