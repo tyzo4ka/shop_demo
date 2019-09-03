@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}Добавить товар{% endblock %}
+{% block content %}
+    <h1 class="text-center">Создать товар</h1>
+    <form action="{% url "webapp:product_create" %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+            <p class="text-danger">{{ error }}</p>
+        {% endfor %}
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}" class="mr-3">{{ field.label }}</label>
+                {% if field|field_type == 'imagefield' %}
+                    {{ field }}
+                {% else %}
+                    {{ field|add_class:"form-control" }}
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="text-danger">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <input type="submit" value="Создать" class="btn btn-primary">
+    </form>
+{% endblock %}
