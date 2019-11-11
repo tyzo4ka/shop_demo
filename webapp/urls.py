@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import IndexView, ProductView, ProductCreateView, BasketChangeView, BasketView
+from .views import IndexView, ProductView, ProductCreateView, BasketChangeView, BasketView, StatisticView
 
 app_name = 'webapp'
 
@@ -9,5 +9,6 @@ urlpatterns = [
     path('products/create/', ProductCreateView.as_view(), name='product_create'),
     path('products/create/', ProductCreateView.as_view(), name='product_create'),
     path('basket/change/', BasketChangeView.as_view(), name='basket_change'),
-    path('basket/', BasketView.as_view(), name='basket')
+    path('basket/', BasketView.as_view(), name='basket'),
+    path('statistic/', StatisticView.as_view(), name='statistic'),
 ]

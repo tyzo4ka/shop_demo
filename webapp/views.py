@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from audioop import reverse
 from django.urls import reverse_lazy
 from webapp.models import Product, OrderProduct, Order
-from django.shortcuts import reverse, redirect
+from django.shortcuts import reverse, redirect, render
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, TemplateView
 
@@ -14,8 +14,7 @@ class StatisticMixin:
         timenow = datetime.now()
         timenow_str = timenow.__str__()
         print("time now", timenow_str)
-        nya = datetime.today()
-        print("njj", nya)
+
         if request.session.get("timenow") == None:
             request.session['timenow'] = timenow_str
         else:
@@ -218,3 +217,20 @@ class BasketView(CreateView):
             self.request.session.pop('products')
         if 'products_count' in self.request.session:
             self.request.session.pop('products_count')
+
+
+class StatisticView(StatisticMixin, View):
+    def get(self, request, *args, **kwargs):
+        # request.session = {"all_time": 0, "counter": 0, "pages": [], "index": {"pagetime": 0, "qt": 0}}
+        all_time = request.session.get("all_time")
+        counter = request.session.get("counter")
+        pages = request.session.get("pages").set()
+        pages_statistic = {}
+        for path in pages:
+            pages_statistic[path] = {}
+            pages_statistic[path]["pagetime"] = request.session.get(path).get("pagetime")
+            pages_statistic[path]["qt"] = request.session.get(path).get("qt")
+        return render(request, 'product/statistic.html', {'all_time': all_time,
+                                                          "counter": counter,
+                                                          "pages": pages,
+                                                          "pages_statistic": pages_statistic})
