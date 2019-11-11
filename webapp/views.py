@@ -1,10 +1,9 @@
 from audioop import reverse
 from django.urls import reverse_lazy
-from webapp.models import Product
+from webapp.models import Product, OrderProduct, Order
 from django.shortcuts import reverse, redirect
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, TemplateView
-
 
 
 class IndexView(ListView):
@@ -46,18 +45,29 @@ class BasketChangeView(View):
         return redirect(next_url)
 
 
-class BasketView(TemplateView):
+class BasketView(CreateView):
+    model = Order
+    fields = ('first_name', 'last_name', 'phone', 'email')
     template_name = 'product/basket.html'
+    success_url = reverse_lazy('webapp:index')
 
     def get_context_data(self, **kwargs):
-        products = self.request.session.get('products', [])
+        basket, basket_total = self._prepare_basket()
+        kwargs['basket'] = basket
+        kwargs['basket_total'] = basket_total
+        return super().get_context_data(**kwargs)
 
-        totals = {}
-        for product_pk in products:
-            if product_pk not in totals:
-                totals[product_pk] = 0
-            totals[product_pk] += 1
+    def form_valid(self, form):
+        if self._basket_empty():
+            form.add_error(None, 'В корзине отсутствуют товары!')
+            return self.form_invalid(form)
+        response = super().form_valid(form)
+        self._save_order_products()
+        self._clean_basket()
+        return response
 
+    def _prepare_basket(self):
+        totals = self._get_totals()
         basket = []
         basket_total = 0
         for pk, qty in totals.items():
@@ -65,9 +75,29 @@ class BasketView(TemplateView):
             total = product.price * qty
             basket_total += total
             basket.append({'product': product, 'qty': qty, 'total': total})
+        return basket, basket_total
 
-        kwargs['basket'] = basket
-        kwargs['basket_total'] = basket_total
+    def _get_totals(self):
+        products = self.request.session.get('products', [])
+        totals = {}
+        for product_pk in products:
+            if product_pk not in totals:
+                totals[product_pk] = 0
+            totals[product_pk] += 1
+        return totals
 
-        return super().get_context_data(**kwargs)
+    def _basket_empty(self):
+        products = self.request.session.get('products', [])
+        return len(products) == 0
+
+    def _save_order_products(self):
+        totals = self._get_totals()
+        for pk, qty in totals.items():
+            OrderProduct.objects.create(product_id=pk, order=self.object, amount=qty)
+
+    def _clean_basket(self):
+        if 'products' in self.request.session:
+            self.request.session.pop('products')
+        if 'products_count' in self.request.session:
+            self.request.session.pop('products_count')
 
