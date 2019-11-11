@@ -15,26 +15,15 @@
         </thead>
         <tbody>
 
-        {% for page in pages_statistic %}
+        {% for k, v in pages_statistic.items %}
             <tr>
-                <td>{{ page.path }}</td>
-                <td>{{ page.path.pagetime }}</td>
-                <td>{{ page.path.qt }}</td>
+                <td>{{ k }}</td>
+                <td>{{ v.pagetime }}</td>
+                <td>{{ v.qt }}</td>
                 <td>{{ all_time }}</td>
                 <td>{{ counter }}</td>
             </tr>
         {% endfor %}
-
-
-{#        {% for stat in statistic %}#}
-{#            {% for path, st in stat.items %}#}
-{#                <tr>#}
-{#                    <th scope="row">{{ path }}</th>#}
-{#                    <td>{{ st.0 }}</td>#}
-{#                    <td>{{ st.1 }}</td>#}
-{#                </tr>#}
-{#            {% endfor %}#}
-{#        {% endfor %}#}
         </tbody>
     </table>
 {% endblock %}
