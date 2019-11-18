@@ -12,13 +12,8 @@
     {% for product in order.products.all %}
         <p>{{ product.name }}</p>
         <p>{{ product.amount }}</p>
-    {% endfor %}
-          <br>
-       <p>Список покупок:</p>
-    {{ order.orderproduct.all }}
-    {% for order in order.orderproduct.all %}
-        <p>{{ order.product }}</p>
-        <p>{{ order.amount }}</p>
+        <a href="{% url 'webapp:order_product_update' order.pk product.pk%}">Изменить количество</a>
+        <a href="{% url 'webapp:order_product_delete' order.pk product.pk%}">Удалить товар</a>
     {% endfor %}
           <br>
             <p>Статус заказа: {{ order.get_status_display }}</p>

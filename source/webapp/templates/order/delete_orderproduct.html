@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Удалить товар{% endblock %}
+{% block content %}
+    <p class="text-center">Товар {{ product.product.name }} будет удален из заказа</p>
+    <form class="text-center" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="submit" value="Да" class="btn btn-primary">
+        <a href="{% url 'webapp:order_detail' product.order.pk %}" class="btn btn-secondary">Отмена</a>
+    </form>
+{% endblock %}

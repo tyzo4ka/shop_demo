@@ -228,9 +228,21 @@ class OrderProductCreateView(CreateView):
 
 class OrderProductUpdateView(UpdateView):
     model = OrderProduct
-    pass
+    template_name = 'order/update_orderproduct.html'
+    form_class = OrderProductForm
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return redirect('webapp:order_detail', self.kwargs.get('pk'))
 
 
 class OrderProductDeleteView(DeleteView):
     model = OrderProduct
-    pass
+    context_object_name = 'product'
+    template_name = 'order/delete_orderproduct.html'
+    form_class = OrderProductForm
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        return redirect('webapp:order_detail', self.kwargs.get('pk'))
