@@ -1,87 +1,65 @@
-from datetime import datetime, timedelta
-from audioop import reverse
+from django.http import HttpResponseRedirect
+from django.shortcuts import reverse, redirect, get_object_or_404
+
 from django.urls import reverse_lazy
-from webapp.models import Product, OrderProduct, Order
-from django.shortcuts import reverse, redirect, render
 from django.views import View
-from django.views.generic import ListView, DetailView, CreateView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+
+from webapp.forms import BasketOrderCreateForm
+from webapp.models import Product, OrderProduct, Order
+from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.contrib import messages
+from webapp.mixins import StatsMixin
 
 
-class StatisticMixin:
-
-    def dispatch(self, request, *args, **kwargs):
-        timenow = datetime.now()
-        timenow_str = timenow.__str__()
-
-        if request.session.get("timenow") == None:
-            request.session['timenow'] = timenow_str
-        else:
-            previous_time = request.session.get("timenow")
-            last_time = datetime.strptime(previous_time, "%Y-%m-%d %H:%M:%S.%f")
-            new_time = timenow
-            request.session['timenow'] = new_time.__str__()
-            difference = new_time - last_time
-            difference_str = difference.__str__()
-            if request.session.get("all_time") == None:
-                request.session['all_time'] = difference_str
-            else:
-                all_time = request.session.get("all_time")
-                try:
-                    all_time2 = datetime.strptime(all_time, "%Y-%m-%d %H:%M:%S.%f")
-                except:
-                    all_time2 = datetime.strptime(all_time, "%H:%M:%S.%f")
-                # all_time2 = datetime.strptime(all_time, "%Y-%m-%d %H:%M:%S.%f")
-                all_time = all_time2 + difference
-                request.session["all_time"] = all_time.__str__()
-            if 'counter' in request.session:
-                request.session['counter'] += 1
-            else:
-                request.session['counter'] = 0
-            if 'pages' in request.session:
-                if request.path in request.session["pages"]:
-                    request.session[request.path]['qt'] += 1
-                    if request.session[request.path].get("pagetime") is None:
-                        request.session[request.path]["pagetime"] = difference_str
-                    else:
-                        old_pagetime = request.session[request.path].get('pagetime')
-                        try:
-                            old_pagetime_data = datetime.strptime(old_pagetime, "%Y-%m-%d %H:%M:%S.%f")
-                        except:
-                            old_pagetime_data = datetime.strptime(old_pagetime, "%H:%M:%S.%f")
-                        # old_pagetime_data = datetime.strptime(old_pagetime, "%Y-%m-%d %H:%M:%S.%f")
-                        new_data = old_pagetime_data + timedelta(seconds=difference.total_seconds())
-                        request.session[request.path]['pagetime'] = new_data.__str__()
-                        try:
-                            old_pagetime_data = datetime.strptime(old_pagetime, "%Y-%m-%d %H:%M:%S.%f")
-                        except:
-                            old_pagetime_data = datetime.strptime(old_pagetime, "%H:%M:%S.%f")
-                else:
-                    request.session['pages'].append(request.path)
-                    request.session[request.path] = {"qt": 0}
-
-            else:
-                request.session['pages'] = []
-        return super().dispatch(request, *args, **kwargs)
-
-
-class IndexView(StatisticMixin, ListView):
+class IndexView(StatsMixin, ListView):
     model = Product
     template_name = 'index.html'
 
+    def get_queryset(self):
+        return Product.objects.filter(in_order=True)
 
-class ProductView(DetailView):
+
+class ProductView(StatsMixin, DetailView):
     model = Product
     template_name = 'product/detail.html'
 
 
-class ProductCreateView(CreateView):
+class ProductCreateView(PermissionRequiredMixin, StatsMixin, CreateView):
     model = Product
     template_name = 'product/create.html'
-    fields = ('name', 'category', 'price', 'photo')
+    fields = ('name', 'category', 'price', 'photo', 'in_order')
+    permission_required = 'webapp.add_product', 'webapp.can_have_piece_of_pizza'
+    permission_denied_message = '403 Доступ запрещён!'
+
+    def get_success_url(self):
+        return reverse('webapp:product_detail', kwargs={'pk': self.object.pk})
+
+
+class ProductUpdateView(LoginRequiredMixin, StatsMixin, UpdateView):
+    model = Product
+    template_name = 'product/update.html'
+    fields = ('name', 'category', 'price', 'photo', 'in_order')
+    context_object_name = 'product'
+
+    def get_success_url(self):
+        return reverse('webapp:product_detail', kwargs={'pk': self.object.pk})
+
+
+class ProductDeleteView(LoginRequiredMixin, StatsMixin, DeleteView):
+    model = Product
+    template_name = 'product/delete.html'
     success_url = reverse_lazy('webapp:index')
+    context_object_name = 'product'
+
+    def delete(self, request, *args, **kwargs):
+        product = self.object = self.get_object()
+        product.in_order = False
+        product.save()
+        return HttpResponseRedirect(self.get_success_url())
 
 
-class BasketChangeView(View):
+class BasketChangeView(StatsMixin, View):
     def get(self, request, *args, **kwargs):
         products = request.session.get('products', [])
 
@@ -90,7 +68,9 @@ class BasketChangeView(View):
         next_url = request.GET.get('next', reverse('webapp:index'))
 
         if action == 'add':
-            products.append(pk)
+            product = get_object_or_404(Product, pk=pk)
+            if product.in_order:
+                products.append(pk)
         else:
             for product_pk in products:
                 if product_pk == pk:
@@ -103,9 +83,9 @@ class BasketChangeView(View):
         return redirect(next_url)
 
 
-class BasketView(CreateView):
+class BasketView(StatsMixin, CreateView):
     model = Order
-    fields = ('first_name', 'last_name', 'phone', 'email')
+    form_class = BasketOrderCreateForm
     template_name = 'product/basket.html'
     success_url = reverse_lazy('webapp:index')
 
@@ -115,6 +95,11 @@ class BasketView(CreateView):
         kwargs['basket_total'] = basket_total
         return super().get_context_data(**kwargs)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def form_valid(self, form):
         if self._basket_empty():
             form.add_error(None, 'В корзине отсутствуют товары!')
@@ -122,6 +107,7 @@ class BasketView(CreateView):
         response = super().form_valid(form)
         self._save_order_products()
         self._clean_basket()
+        messages.success(self.request, 'Заказ оформлен!')
         return response
 
     def _prepare_basket(self):
@@ -160,22 +146,54 @@ class BasketView(CreateView):
             self.request.session.pop('products_count')
 
 
-class StatisticView(StatisticMixin, View):
+class OrderListView(ListView):
+    template_name = 'order/list.html'
+
+    def get_queryset(self):
+        if self.request.user.has_perm('webapp:view_order'):
+            return Order.objects.all().order_by('-created_at')
+        return self.request.user.orders.all().order_by('-created_at')
+
+
+class OrderDetailView(DetailView):
+    template_name = 'order/detail.html'
+
+    def get_queryset(self):
+        if self.request.user.has_perm('webapp:view_order'):
+            return Order.objects.all()
+        return self.request.user.orders.all()
+
+
+class OrderCreateView(CreateView):
+    model = Order
+    pass
+
+
+class OrderUpdateView(UpdateView):
+    model = Order
+    pass
+
+
+class OrderDeliverView(View):
     def get(self, request, *args, **kwargs):
-        all_time = request.session.get("all_time")
-        counter = request.session.get("counter")
-        pages = set(request.session.get("pages"))
-        print("pages", pages)
-        pages_statistic = {}
+        pass
 
-        for path in pages:
-            pages_statistic[path] = {}
-            print('request.session.get(path).get("pagetime")', request.session[path].get("pagetime"))
-            pages_statistic[path]["pagetime"] = request.session[path].get("pagetime")
-            pages_statistic[path]["qt"] = request.session.get(path).get("qt")
 
-        print('pages_statistic', pages_statistic)
-        return render(request, 'product/statistic.html', {'all_time': all_time,
-                                                          "counter": counter,
-                                                          "pages": pages,
-                                                          "pages_statistic": pages_statistic})
+class OrderCancelView(View):
+    def get(self, request, *args, **kwargs):
+        pass
+
+
+class OrderProductCreateView(CreateView):
+    model = OrderProduct
+    pass
+
+
+class OrderProductUpdateView(UpdateView):
+    model = OrderProduct
+    pass
+
+
+class OrderProductDeleteView(DeleteView):
+    model = OrderProduct
+    pass

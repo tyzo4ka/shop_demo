@@ -43,12 +43,12 @@
             </button>
         </p>
         <form action="{% url "webapp:basket" %}" method="POST">
-            <div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            <div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel"
                  aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Сделать заказ</h5>
+                            <h5 class="modal-title" id="orderModalLabel">Сделать заказ</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -70,7 +70,7 @@
 {% block scripts %}
     {% if basket and form.errors %}
         <script type="application/javascript">
-            $(window).on('load', function () {
+            $(window).on('load', function(){
                 $('#orderModal').modal('show');
             });
         </script>

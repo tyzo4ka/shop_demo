@@ -6,6 +6,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'category', 'price')
     list_filter = ('category',)
 
+
 class OrderProductInline(admin.TabularInline):
     model = OrderProduct
     fields = ('product', 'amount')
@@ -20,4 +21,3 @@ class OrderAdmin(admin.ModelAdmin):
 
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Order, OrderAdmin)
-
