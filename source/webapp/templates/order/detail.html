@@ -22,4 +22,6 @@
     {% endfor %}
           <br>
             <p>Статус заказа: {{ order.get_status_display }}</p>
+            <p><a href="{% url 'webapp:order_product_create' order.pk %}">Добавить товар</a></p>
+
 {% endblock %}

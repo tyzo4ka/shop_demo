@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from webapp.forms import BasketOrderCreateForm, ManualOrderForm
+from webapp.forms import BasketOrderCreateForm, ManualOrderForm, OrderProductForm
 from webapp.models import Product, OrderProduct, Order, ORDER_STATUS_CHOICES
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.contrib import messages
@@ -211,7 +211,19 @@ class OrderCancelView(View):
 
 class OrderProductCreateView(CreateView):
     model = OrderProduct
-    pass
+    template_name = 'order/create_orderproduct.html'
+    form_class = OrderProductForm
+
+    def form_valid(self, form):
+        pk = self.kwargs.get('pk')
+        order = Order.objects.get(pk=pk)
+        print("order", order)
+        OrderProduct.objects.create(
+            order=order,
+            product=form.cleaned_data['product'],
+            amount=form.cleaned_data['amount']
+        )
+        return redirect('webapp:order_detail', self.kwargs.get('pk'))
 
 
 class OrderProductUpdateView(UpdateView):
