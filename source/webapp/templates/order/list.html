@@ -10,6 +10,7 @@
                 <p>Email : {{ order.email }}</p>
                 <p>Дата создания : {{ order.created_at }}</p>
                 <a href="{% url 'webapp:order_detail' order.pk %}">Подробнее</a>
+                <a href="{% url 'webapp:order_update' order.pk %}">Редактировать</a>
                 <br><br>
             {% endfor %}
 {% endblock %}
