@@ -90,3 +90,6 @@ class PasswordChangeForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['password', 'password_confirm', 'old_password']
+
+
+

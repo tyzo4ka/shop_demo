@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from webapp.forms import BasketOrderCreateForm
+from webapp.forms import BasketOrderCreateForm, ManualOrderForm
 from webapp.models import Product, OrderProduct, Order
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.contrib import messages
@@ -167,7 +167,8 @@ class OrderDetailView(DetailView):
 
 class OrderCreateView(CreateView):
     model = Order
-    pass
+    template_name = 'order/create.html'
+    form_class = ManualOrderForm
 
 
 class OrderUpdateView(UpdateView):
