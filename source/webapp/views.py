@@ -36,21 +36,25 @@ class ProductCreateView(PermissionRequiredMixin, StatsMixin, CreateView):
         return reverse('webapp:product_detail', kwargs={'pk': self.object.pk})
 
 
-class ProductUpdateView(LoginRequiredMixin, StatsMixin, UpdateView):
+class ProductUpdateView(PermissionRequiredMixin, StatsMixin, UpdateView):
     model = Product
     template_name = 'product/update.html'
     fields = ('name', 'category', 'price', 'photo', 'in_order')
     context_object_name = 'product'
+    permission_required = 'webapp.change_product'
+    permission_denied_message = '403 Доступ запрещён!'
 
     def get_success_url(self):
         return reverse('webapp:product_detail', kwargs={'pk': self.object.pk})
 
 
-class ProductDeleteView(LoginRequiredMixin, StatsMixin, DeleteView):
+class ProductDeleteView(PermissionRequiredMixin, StatsMixin, DeleteView):
     model = Product
     template_name = 'product/delete.html'
     success_url = reverse_lazy('webapp:index')
     context_object_name = 'product'
+    permission_required = 'webapp.delete_product'
+    permission_denied_message = '403 Доступ запрещён!'
 
     def delete(self, request, *args, **kwargs):
         product = self.object = self.get_object()
@@ -156,8 +160,10 @@ class OrderListView(ListView):
         return self.request.user.orders.all().order_by('-created_at')
 
 
-class OrderDetailView(DetailView):
+class OrderDetailView(PermissionRequiredMixin, DetailView):
     template_name = 'order/detail.html'
+    permission_required = 'webapp.view_product'
+    permission_denied_message = '403 Доступ запрещён!'
 
     def get_queryset(self):
         if self.request.user.has_perm('webapp:view_order'):
@@ -165,27 +171,31 @@ class OrderDetailView(DetailView):
         return self.request.user.orders.all()
 
 
-class OrderCreateView(CreateView):
+class OrderCreateView(PermissionRequiredMixin, CreateView):
     model = Order
     template_name = 'order/create.html'
     form_class = ManualOrderForm
+    permission_required = 'webapp.add_product'
+    permission_denied_message = '403 Доступ запрещён!'
 
 
-class OrderUpdateView(UpdateView):
+class OrderUpdateView(PermissionRequiredMixin, UpdateView):
     model = Order
     context_object_name = 'order'
     form_class = ManualOrderForm
     template_name = 'order/update.html'
+    permission_required = 'webapp.change_product'
+    permission_denied_message = '403 Доступ запрещён!'
 
 
-class OrderDeliverView(View):
+class OrderDeliverView(PermissionRequiredMixin, View):
+    permission_required = 'webapp.change_product'
+    permission_denied_message = '403 Доступ запрещён!'
+
     def get(self, request, *args, **kwargs):
         pk = self.kwargs.get("pk")
         order = Order.objects.get(pk=pk)
-        context = {
-            'order': order
-        }
-        return render(request, 'order/deliver.html', context)
+        return render(request, 'order/deliver.html', context={'order': order})
 
     def post(self, request, *args, **kwargs):
         pk = self.kwargs.get('pk')
@@ -226,7 +236,9 @@ class OrderProductCreateView(CreateView):
         return redirect('webapp:order_detail', self.kwargs.get('pk'))
 
 
-class OrderProductUpdateView(UpdateView):
+class OrderProductUpdateView(PermissionRequiredMixin, UpdateView):
+    permission_required = 'webapp.update_orderproduct'
+    permission_denied_message = 'Permission denied'
     model = OrderProduct
     template_name = 'order/update_orderproduct.html'
     form_class = OrderProductForm
@@ -236,11 +248,13 @@ class OrderProductUpdateView(UpdateView):
         return redirect('webapp:order_detail', self.kwargs.get('pk'))
 
 
-class OrderProductDeleteView(DeleteView):
+class OrderProductDeleteView(PermissionRequiredMixin, DeleteView):
     model = OrderProduct
     context_object_name = 'product'
     template_name = 'order/delete_orderproduct.html'
     form_class = OrderProductForm
+    permission_required = 'webapp.delete_orderproduct'
+    permission_denied_message = 'Permission denied'
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()

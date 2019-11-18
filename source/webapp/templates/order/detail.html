@@ -9,9 +9,12 @@
     <p>Дата создания : {{ order.created_at }}</p>
     <br>
     <p>Список покупок:</p>
+    {% for product_in_order in order.orderproduct_set.all %}
+
+        <p>{{ product_in_order.product }}: {{ product_in_order.amount }}</p>
+    {% endfor %}
     {% for product in order.products.all %}
         <p>{{ product.name }}</p>
-        <p>{{ product.amount }}</p>
         <a href="{% url 'webapp:order_product_update' order.pk product.pk%}">Изменить количество</a>
         <a href="{% url 'webapp:order_product_delete' order.pk product.pk%}">Удалить товар</a>
     {% endfor %}
