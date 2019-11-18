@@ -178,12 +178,10 @@ class OrderUpdateView(UpdateView):
     template_name = 'order/update.html'
 
 
-
 class OrderDeliverView(View):
     def get(self, request, *args, **kwargs):
         pk = self.kwargs.get("pk")
         order = Order.objects.get(pk=pk)
-        print("order", order)
         context = {
             'order': order
         }
@@ -199,7 +197,16 @@ class OrderDeliverView(View):
 
 class OrderCancelView(View):
     def get(self, request, *args, **kwargs):
-        pass
+        pk = self.kwargs.get('pk')
+        order = Order.objects.get(pk=pk)
+        return render(request, 'order/cancel.html', context={'order': order})
+
+    def post(self, request, *args, **kwargs):
+        pk = self.kwargs.get('pk')
+        order = Order.objects.get(pk=pk)
+        order.status = ORDER_STATUS_CHOICES[4][0]
+        order.save()
+        return redirect('webapp:order_detail', self.kwargs.get('pk'))
 
 
 class OrderProductCreateView(CreateView):

@@ -11,6 +11,7 @@
                 <p>Дата создания : {{ order.created_at }}</p>
                 <a href="{% url 'webapp:order_detail' order.pk %}">Подробнее</a>
                 <a href="{% url 'webapp:order_update' order.pk %}">Редактировать</a>
+                <a href="{% url 'webapp:order_deliver' order.pk %}">Отмена заказа</a>
                 <a href="{% url 'webapp:order_deliver' order.pk %}">Заказ доставлен</a>
                 <br><br>
             {% endfor %}
