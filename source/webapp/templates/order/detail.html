@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}{{ object.name }}{% endblock %}
+{% block content %}
+   <h4>Заказ:</h4>
+    <p>Имя клиента: {{ order.first_name }} {{ order.last_name }}</p>
+    <p>Email : {{ order.email }}</p>
+    <p>Телефон : {{ order.phone }}</p>
+    <p>Email : {{ order.email }}</p>
+    <p>Дата создания : {{ order.created_at }}</p>
+    <br>
+    <p>Список покупок:</p>
+    {% for product in order.products.all %}
+        <p>{{ product.name }}</p>
+        <p>{{ product.amount }}</p>
+    {% endfor %}
+          <br>
+       <p>Список покупок:</p>
+    {{ order.orderproduct.all }}
+    {% for order in order.orderproduct.all %}
+        <p>{{ order.product }}</p>
+        <p>{{ order.amount }}</p>
+    {% endfor %}
+          <br>
+            <p>Статус заказа: {{ order.get_status_display }}</p>
+{% endblock %}

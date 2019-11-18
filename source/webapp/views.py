@@ -173,7 +173,10 @@ class OrderCreateView(CreateView):
 
 class OrderUpdateView(UpdateView):
     model = Order
-    pass
+    context_object_name = 'order'
+    form_class = ManualOrderForm
+    template_name = 'order/update.html'
+
 
 
 class OrderDeliverView(View):
