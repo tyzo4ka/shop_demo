@@ -148,6 +148,7 @@ class BasketView(StatsMixin, CreateView):
 
 class OrderListView(ListView):
     template_name = 'order/list.html'
+    context_object_name = 'orders'
 
     def get_queryset(self):
         if self.request.user.has_perm('webapp:view_order'):
