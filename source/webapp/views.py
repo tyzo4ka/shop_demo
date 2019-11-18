@@ -1,12 +1,12 @@
 from django.http import HttpResponseRedirect
-from django.shortcuts import reverse, redirect, get_object_or_404
+from django.shortcuts import reverse, redirect, get_object_or_404, render
 
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from webapp.forms import BasketOrderCreateForm, ManualOrderForm
-from webapp.models import Product, OrderProduct, Order
+from webapp.models import Product, OrderProduct, Order, ORDER_STATUS_CHOICES
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.contrib import messages
 from webapp.mixins import StatsMixin
@@ -181,7 +181,20 @@ class OrderUpdateView(UpdateView):
 
 class OrderDeliverView(View):
     def get(self, request, *args, **kwargs):
-        pass
+        pk = self.kwargs.get("pk")
+        order = Order.objects.get(pk=pk)
+        print("order", order)
+        context = {
+            'order': order
+        }
+        return render(request, 'order/deliver.html', context)
+
+    def post(self, request, *args, **kwargs):
+        pk = self.kwargs.get('pk')
+        order = Order.objects.get(pk=pk)
+        order.status = ORDER_STATUS_CHOICES[3][0]
+        order.save()
+        return redirect('webapp:order_detail', self.kwargs.get('pk'))
 
 
 class OrderCancelView(View):
