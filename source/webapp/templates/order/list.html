@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Заказы:</h2>
+    <br>
+    {% csrf_token %}
+            {% for order in orders %}
+                <p>Имя клиента: {{ order.first_name }} {{ order.last_name }}</p>
+                <p>Email : {{ order.email }}</p>
+                <p>Телефон : {{ order.phone }}</p>
+                <p>Email : {{ order.email }}</p>
+                <p>Дата создания : {{ order.created_at }}</p>
+                <a href="{% url 'webapp:order_detail' order.pk %}">Подробнее</a>
+                <br><br>
+            {% endfor %}
+{% endblock %}
